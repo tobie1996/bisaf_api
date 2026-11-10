@@ -4,18 +4,53 @@ const authRoutes = require('./routes/auth');
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
+const { connectDB } = require('./config/db');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const app = express();
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://bisafcameroun.vercel.app';
-const LOCAL_ORIGINS = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8000'];
-const ALLOWED_ORIGINS = Array.from(new Set([FRONTEND_URL, ...LOCAL_ORIGINS]));
+const FRONTEND_URLS = [
+  process.env.FRONTEND_URL,
+  'https://bisafcameroun.com',
+  'https://www.bisafcameroun.com',
+  'https://api-bisaf.afriday.tech',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:8000',
+].filter(Boolean);
+
+const normalizeOrigin = (value) => {
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+};
+
+const ALLOWED_ORIGINS = new Set([
+  ...FRONTEND_URLS,
+  ...FRONTEND_URLS.map((value) => value.replace(/^https?:\/\/(www\.)?/, 'https://www.')),
+].map(normalizeOrigin).filter(Boolean));
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+
+  try {
+    const { hostname, protocol } = new URL(origin);
+    if ((hostname === 'localhost' || hostname === '127.0.0.1') && ['http:', 'https:'].includes(protocol)) {
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
       return;
     }
@@ -23,8 +58,8 @@ app.use(cors({
   },
   credentials: true,
 }));
-const port = process.env.PORT || 8000; // Dynamically handle the port for Vercel
-const API_BASE_URL = process.env.API_BASE_URL || 'https://api-bisaf.vercel.app';
+const port = process.env.PORT || 8000;
+const API_BASE_URL = process.env.API_BASE_URL || 'https://api-bisaf.afriday.tech';
 
 // Swagger configuration
 const swaggerOptions = {
@@ -61,7 +96,7 @@ try {
   console.error('Swagger generation error:', error.message);
 }
 
-// Connexion à MongoDB
+// Connexion à PostgreSQL
 connectDB();
 
 // Middleware pour parser le JSON

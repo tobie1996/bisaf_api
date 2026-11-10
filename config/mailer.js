@@ -7,8 +7,8 @@ const BRAND_COLOR = '#00aeef';
 const BRAND_DARK = '#0096cc';
 const FROM_EMAIL = process.env.GMAIL_USER || 'infobisafcameroun@gmail.com';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'infobisafcameroun@gmail.com';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://bisafcameroun.vercel.app';
-const LOGO_URL = process.env.LOGO_URL || 'https://api-bisaf.vercel.app';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://bisafcameroun.com';
+const LOGO_URL = process.env.LOGO_URL || 'https://api-bisaf.afriday.tech';
 
 let transporter = null;
 
@@ -205,7 +205,7 @@ function buildContentItemHtml(type, item, action) {
 }
 
 async function sendContentUpdateToSubscribers({ type, item, action }) {
-  const subscribers = await Newsletter.find();
+  const subscribers = await Newsletter.findAll();
   if (!subscribers.length) return [];
 
   const typeLabel = type === 'blog'
@@ -290,7 +290,7 @@ async function sendContactNotification({ name, email, phone, subject, message })
       title: 'Nouveau message de contact',
       subtitle: 'Un visiteur vous a contacté via le site.',
       contentHtml,
-      footerNote: 'Message reçu automatiquement depuis le formulaire de contact de bisafcameroun.vercel.app.',
+      footerNote: 'Message reçu automatiquement depuis le formulaire de contact de bisafcameroun.com.',
     }),
   });
 }
